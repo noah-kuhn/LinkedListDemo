@@ -5,7 +5,9 @@
  *  of C, but has some experience with Java. I should also note, this demo is for understanding,
  *  not efficiency.
  *
- *  This file (linkedlist.c) is the C file for the linked list demo.
+ *  This file (linkedlist-ref.c) is the C file for the linked list demo's reference 'solution'.
+ *  I put 'solution' in quotes because this was written hastily and definitely has memory leaks;
+ *  however, it contains the usage of C concepts such as structs, enums, unions, and pointers.
  *
  */
 
@@ -20,24 +22,39 @@
 
 /* list_new(): no parameters, return a pointer to a new list or NULL if space can't be allocated */
 list_t *list_new(){
-    /* TODO: allocate the space for a new list */
-    
+    list_t *l = malloc(sizeof(list_t));
     if(l == NULL){
       return NULL;
     }
-    /* TODO: set all of its fields */
-    
+    /* now we need to actually set all of its fields */
+    l->header = malloc(sizeof(node_t));
+    l->header->prev = l->header;
+    l->header->val.sval = NULL;
+    l->header->type = VAL_NONE;
+    l->header->next = l->header;
+    l->size = 0;
     return l;
 }
 
 /* list_free(): list * parameter, no return value; free all space used by this list */
 void list_free(list_t *l){
-    /* error-check */
     if(l == NULL){
         return;
     }
-    /* TODO: Free the whole structure and any members it has */
-    
+    /* Remember to free the whole structure and any members it has! */
+    node_t *node_to_free = NULL;
+    node_t *curr_node = l->header->next;
+    while(curr_node != NULL){
+        node_to_free = curr_node;
+        curr_node = curr_node->next;
+        if(curr_node->type == VAL_STR){
+            free(curr_node->val.sval);
+        }
+        free(node_to_free);
+    }
+    /* Free the list structure itself */
+    free(l);
+    return;
 }
 
 /* list_push(): value, value type, and list * parameters, no return value; add the value to the front of the list */
@@ -51,26 +68,41 @@ void list_push(value_t v, value_type_t t, list_t *l){
         return;
     }
     
-    /* TODO: plug in the right type and value */
+    /* plug in the right type and value */
     switch(t){
         case VAL_CHAR:
+            new_node->val.cval = v.cval;
             break;
         case VAL_INT:
+            new_node->val.ival = v.ival;
             break;
         case VAL_BOOL:
+            new_node->val.bval = v.bval;
             break;
         case VAL_STR:
             /* we want a *copy* of this string, or else modifying the original modifies this value */
+            new_node->val.sval = malloc(strlen(v.sval) + 1);
+            if(new_node->val.sval == NULL){
+                /* major issue! free and return early */
+                free(new_node);
+                return;
+            }
+            strcpy(new_node->val.sval, v.sval); /* usage: strcpy(char *dest, const char *src) */
             break;
         default:
-            /* something went wrong; free and return early */
+            /* major issue! free and return early */
             free(new_node);
             return;
     }
     new_node->type = t;
 
-    /* TODO: link at the front of the list */
-    
+    /* link at the front of the list */
+    if(l->size == 0){
+        l->header->prev = new_node;
+    }
+    new_node->next = l->header->next;
+    new_node->prev = l->header;
+    l->header->next = new_node;
     l->size++;
 }
 
@@ -107,14 +139,22 @@ void list_append(value_t v, value_type_t t, list_t *l){
             strcpy(new_node->val.sval, v.sval); /* usage: strcpy(char *dest, const char *src) */
             break;
         default:
-            /* something went wrong; free and return early */
+            /* major issue! free and return early */
             free(new_node);
             return;
     }
     new_node->type = t;
 
-    /* TODO: link at the back of the list */
-
+    /* link at the back of the list */
+    if(l->size > 0){
+      l->header->prev->next = new_node;
+    }
+    if(l->size == 0){
+      l->header->next = new_node;
+    }
+    new_node->prev = l->header->prev;
+    new_node->next = l->header;
+    l->header->prev = new_node;
     l->size++;
 }
 
@@ -127,27 +167,34 @@ value_t list_pop(list_t *l){
         return ret_val;
     }
 
-    /* TODO: get the return value */
+    /* get the return value */
     value_type_t val_type = l->header->next->type;
     switch(val_type){
         case VAL_CHAR:
+            ret_val.cval = l->header->next->val.cval;
             break;
         case VAL_INT:
+            ret_val.ival = l->header->next->val.ival;
             break;
         case VAL_BOOL:
+            ret_val.bval = l->header->next->val.bval;
             break;
         case VAL_STR:
             /* this time we don't want to copy it - we want to return the actual address */
+            ret_val.sval = l->header->next->val.sval;
             break;
         default:
-            /* something went wrong; return ret_val, which at this point should still be NULL */
+            /* major issue! return ret_val, which at this point should still be NULL */
             return ret_val;
     }
 
-    /* TODO: free and unlink front node */
+    /* free and unlink front node */
     /* a note: normally, you would free the string it points to if applicable; this time, 
        we're electing not to, since the return value is that pointer when the val is a string. */
-    
+    node_t *dead = l->header->next;
+    l->header->next->next->prev = l->header;
+    l->header->next = l->header->next->next;
+    free(dead);
     l->size--;
 
     return ret_val;
@@ -179,12 +226,15 @@ value_t list_remove_last(list_t *l){
             ret_val.sval = l->header->prev->val.sval;
             break;
         default:
-            /* something went wrong; return ret_val, which at this point should still be NULL */
+            /* major issue! return ret_val, which at this point should still be NULL */
             return ret_val;
     }
 
-    /* TODO: free and unlink last node */
-    
+    /* free and unlink last node */
+    node_t *dead = l->header->prev;
+    l->header->prev->prev->next = l->header;
+    l->header->prev = l->header->prev->prev;
+    free(dead);
     l->size--;
 
     return ret_val;
@@ -200,19 +250,22 @@ int list_size(list_t *l){
 
 /* list_get(): int and list * parameters, returns the value at the given index */
 value_t list_get(int index, list_t *l){
-    /* error-check (!l is another way of saying l == NULL)*/
     if( !l || index >= l->size){
         value_t null_val;
         null_val.sval = NULL;
         return null_val;
     }
-    /* TODO: cycle through the linked list until we arrive at the index */
-    return null_val;
+    int i = 0;
+    node_t *curr_node = l->header->next;
+    while(i < index){
+        curr_node = curr_node->next;
+        i++;
+    }
+    return curr_node->val;
 }
 
 /* list_get_type(): int and list * parameters, returns the value type at the given index */
 value_type_t list_get_type(int index, list_t *l){
-    /* error-check */
     if( !l || index >= l->size){
         return VAL_NONE;
     }
