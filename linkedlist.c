@@ -7,6 +7,12 @@
  *
  *  This file (linkedlist.c) is the C file for the linked list demo.
  *
+ *  In this file, I have some comments that are related to each other; the one that appears later
+ *  in the code will say (see comment [X]), which you can find by ctrl+f (or whatever search
+ *  feature is available to you) and searching for the comment name in brackets, e.g. "[X]". This
+ *  is mostly because a lot of the functions mirror others, and I didn't want to be redundant with
+ *  the comments.
+ *
  */
 
 /* Here are some fairly standard libraries - not all are used here, but it'll be helpful if
@@ -19,29 +25,37 @@
 
 #define DEBUG_MODE 1    /* we will use #define to declare this constant ahead of time */
 
+/* I declare this function up here so you can use it in other functions that are defined above
+   demo_log's definition. Remember: C reads from top to bottom - if you were to call demo_log in
+   a list function without declaring it above the list function, C would have no clue what you
+   meant, and it would be mad at you. */
+void demo_log(const char *);
+
 /* list_new(): no parameters, return a pointer to a new list or NULL if space can't be allocated */
 list_t *list_new(){
     /* TODO: allocate the space for a new list */
     
-    if(l == NULL){
+    /* error check */
+    if( /* your list variable name here */ == NULL){
       return NULL;
     }
     /* TODO: set all of its fields */
     
-    return l;
+    return /* your list variable name here */;
 }
 
 /* list_free(): list * parameter, no return value; free all space used by this list */
 void list_free(list_t *l){
-    /* error-check */
+    /* error check */
     if(l == NULL){
         return;
     }
     /* TODO: Free the whole structure and any members it has */
-    
+
 }
 
-/* list_push(): value, value type, and list * parameters, no return value; add the value to the front of the list */
+/* list_push(): value, value type, and list * parameters, no return value; add the value to the
+   front of the list */
 void list_push(value_t v, value_type_t t, list_t *l){
     /* error check */
     if(l == NULL){
@@ -55,16 +69,21 @@ void list_push(value_t v, value_type_t t, list_t *l){
     /* TODO: plug in the right type and value */
     switch(t){
         case VAL_CHAR:
+
             break;
         case VAL_INT:
+
             break;
         case VAL_BOOL:
+        
             break;
         case VAL_STR:
-            /* we want a *copy* of this string, or else modifying the original modifies this value */
+            /* we want a *copy* of this string, or else modifying the original modifies this
+               value */
+
             break;
         default:
-            /* something went wrong; free and return early */
+            /* major issue! free and return early */
             free(new_node);
             return;
     }
@@ -75,7 +94,8 @@ void list_push(value_t v, value_type_t t, list_t *l){
     l->size++;
 }
 
-/* list_append(): value, value type, and list * parameters, no return value; add the value to the end of the list */
+/* list_append(): value, value type, and list * parameters, no return value; add the value to the
+   end of the list */
 void list_append(value_t v, value_type_t t, list_t *l){
     /* error check */    
     if(l == NULL){
@@ -98,7 +118,8 @@ void list_append(value_t v, value_type_t t, list_t *l){
             new_node->val.bval = v.bval;
             break;
         case VAL_STR:
-            /* we want a *copy* of this string, or else modifying the original modifies this value */
+            /* we want a *copy* of this string, or else modifying the original modifies this
+               value */
             new_node->val.sval = malloc(strlen(v.sval) + 1);
             if(new_node->val.sval == NULL){
                 /* major issue! free and return early */
@@ -128,17 +149,24 @@ value_t list_pop(list_t *l){
         return ret_val;
     }
 
-    /* TODO: get the return value */
+    /* get the return value */
     value_type_t val_type = l->header->next->type;
     switch(val_type){
         case VAL_CHAR:
+
             break;
         case VAL_INT:
+
             break;
         case VAL_BOOL:
+
             break;
         case VAL_STR:
-            /* this time we don't want to copy it - we want to return the actual address */
+            /* [B] The original code I had here returned the actual address of the string rather
+               than copying it. I've changed it because we added a part below that frees the string
+               during our discussion section. We need a copy since we're freeing the string -
+               if you free a pointer and return it, it points to unallocated memory. */
+            
             break;
         default:
             /* something went wrong; return ret_val, which at this point should still be NULL */
@@ -146,8 +174,7 @@ value_t list_pop(list_t *l){
     }
 
     /* TODO: free and unlink front node */
-    /* a note: normally, you would free the string it points to if applicable; this time, 
-       we're electing not to, since the return value is that pointer when the val is a string. */
+    /* In addition: free this node's string value when applicable */
     
     l->size--;
 
@@ -176,8 +203,13 @@ value_t list_remove_last(list_t *l){
             ret_val.bval = l->header->prev->val.bval;
             break;
         case VAL_STR:
-            /* this time we don't want to copy it - we want to return the actual address */
-            ret_val.sval = l->header->prev->val.sval;
+            /* (see comment [B]) */
+            ret_val.sval = malloc(strlen(l->header->next->val.sval) + 1);
+            if(ret_val.sval == NULL){
+                /* major issue, return early (NULL) */
+                return ret_val;
+            }
+            strcpy(ret_val.sval, l->header->next->val.sval); /* strcpy as used above */
             break;
         default:
             /* something went wrong; return ret_val, which at this point should still be NULL */
@@ -185,7 +217,8 @@ value_t list_remove_last(list_t *l){
     }
 
     /* TODO: free and unlink last node */
-    
+    /* In addition: free this node's string value when applicable */
+
     l->size--;
 
     return ret_val;
@@ -201,7 +234,7 @@ int list_size(list_t *l){
 
 /* list_get(): int and list * parameters, returns the value at the given index */
 value_t list_get(int index, list_t *l){
-    /* error-check (!l is another way of saying l == NULL)*/
+    /* error check (!l is another way of saying l == NULL) */
     if( !l || index >= l->size){
         value_t null_val;
         null_val.sval = NULL;
@@ -213,7 +246,7 @@ value_t list_get(int index, list_t *l){
 
 /* list_get_type(): int and list * parameters, returns the value type at the given index */
 value_type_t list_get_type(int index, list_t *l){
-    /* error-check */
+    /* error check */
     if( !l || index >= l->size){
         return VAL_NONE;
     }
@@ -278,14 +311,16 @@ int main() {
     val1.ival = 429;
     val2.cval = 'A';
     val3.bval = true;
-    val4.sval = "cs429"; /* C strings are pointers to arrays of chars ending in a null terminator '\0' */
+    val4.sval = "cs429"; /* C strings are pointers to arrays of chars ending in null terminator */
+                         /* note: the null terminator is escape character '/0' */
 
     list_t *list = list_new();
 
     if(list != NULL){
         /* here are a few basic tests */
 
-        demo_log(">> Testing list_size(), list_append(), list_push(), list_remove_last(), and list_pop()...\n");
+        demo_log(">> Testing list_size(), list_append(), list_push(), list_remove_last(), and
+                        list_pop()...\n");
 
         list_print(list);
 
@@ -320,7 +355,10 @@ int main() {
         list_print(list);
 
         demo_log(">> popping...\n");
-        if(strcmp(list_pop(list).sval, val4.sval) != 0){ /* strcmp is a string comparison library function */
+        if(strcmp(list_pop(list).sval, val4.sval) != 0){
+            /* strcmp is a string comparison library function. It works similar to Java's
+               compareTo: 0 if they're the same, negative if the first is 'less' than the second,
+               and positive if the first is 'more' than the second. */
             demo_log("!!! list_pop() FAILED !!!\n");
         }
         list_print(list);
@@ -389,7 +427,8 @@ int main() {
         }
 
         list_free(list);
-        list = NULL; /* it's a good idea to NULL out your freed pointers so you don't accidentally access unallocated memory */
+        list = NULL; /* it's a good idea to NULL out your freed pointers so you don't accidentally
+                        access unallocated memory */
 
     }else{
         printf("!!! list_new() FAILED !!!\n");
