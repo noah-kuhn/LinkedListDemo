@@ -317,7 +317,7 @@ int main() {
     value_t val1, val2, val3, val4;
     val1.ival = 429;
     val2.cval = 'A';
-    val3.bval = false;
+    val3.bval = true;
     val4.sval = calloc(6, sizeof(char)); /* the string below is only five characters long, but we need six spots in memory to account for the null terminator */
     *(val4.sval) = "cs429"; /* C strings are pointers to arrays of chars ending in a null terminator '\0' */
 
@@ -332,19 +332,19 @@ int main() {
             log("!!! list_size() FAILED !!!\n");
         }
 
-        list_append(val1, list);
+        list_append(val1, VAL_INT, list);
         log(">> appending...\n");
         list_print(list);
 
-        list_push(val2, list);
+        list_push(val2, VAL_CHAR, list);
         log(">> pushing...\n")
         list_print(list);
 
-        list_append(val3, list);
+        list_append(val3, VAL_BOOL, list);
         log(">> appending...\n");
         list_print(list);
 
-        list_push(val4, list);
+        list_push(val4, VAL_STR, list);
         log(">> pushing...\n");
         list_print(list);
 
