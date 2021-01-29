@@ -385,8 +385,8 @@ int main() {
     if(list != NULL){
         /* here are a few basic tests */
 
-        demo_log(">> Testing list_size(), list_append(), list_push(), list_remove_last(), and
-                        list_pop()...\n");
+        demo_log(">> Testing list_size(), list_append(), list_push(), list_remove_last(), ");
+        demo_log("and list_pop()...\n");
 
         list_print(list);
 
