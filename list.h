@@ -7,11 +7,11 @@
  *
  *  This file (list.h) is a header file for the linked list demo.
  *  Contents:
- *      - value_t union (line 21)
- *      - value_type_t enum (line 30)
- *      - node_t struct (line 39)
- *      - list_t struct (line 49)
- *      - function prototypes for lists (line 56)
+ *      - value_t union (line 22)
+ *      - value_type_t enum (line 31)
+ *      - node_t struct (line 41)
+ *      - list_t struct (line 51)
+ *      - function prototypes for lists (line 58)
  *
  */
 
@@ -26,7 +26,7 @@ typedef union{
     int ival;
     bool bval;
     char *sval; /* in C, strings are represented by pointers to characters */
-} value_t; /* it's fairly standard to end a type name with '_t' to denote that it is a custom type */
+} value_t; /* it's fairly standard to end type names with '_t' to denote that it's a custom type */
 
 /* DEFINITION OF VALUE_TYPE_T ENUM */
 /* Enums are just like in Java: sets of integers with names */
@@ -41,7 +41,7 @@ typedef enum{
 /* DEFINITION OF NODE_T STRUCT */
 /* Our list nodes will need to contain their values and point to their previous and next nodes */
 typedef struct NODE{
-    /* we have to use the type 'struct NODE' (declared on line 30) since we haven't defined node_t yet */
+    /* we have to use the type 'struct NODE' since we haven't defined node_t yet */
     struct NODE *prev;
     value_t val;
     value_type_t type;
@@ -63,10 +63,12 @@ list_t *list_new();
 /* list_free(): list * parameter, no return value; free all space used by this list */
 void list_free(list_t *);
 
-/* list_push(): value, value type, and list * parameters, no return value; add the value to the front of the list */
+/* list_push(): value, value type, and list * parameters, no return value; add the value to the
+   front of the list */
 void list_push(value_t, value_type_t, list_t *);
 
-/* list_append(): value, value type, and list * parameters, no return value; add the value to the end of the list */
+/* list_append(): value, value type, and list * parameters, no return value; add the value to the
+   end of the list */
 void list_append(value_t, value_type_t, list_t *);
 
 /* list_pop(): list * parameter, return the value from the front of the list and remove it */
