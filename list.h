@@ -79,10 +79,10 @@ value_t list_remove_last(list_t *);
 int list_size(list_t *);
 
 /* list_get(): int and list * parameters, returns the value at the given index */
-value_t list_get(int, list *);
+value_t list_get(int, list_t *);
 
 /* list_get_type(): int and list * parameters, returns the value type at the given index */
-value_type_t list_get_type(int, list *);
+value_type_t list_get_type(int, list_t *);
 
 /* list_print(): list * parameter, no return value; print the given list */
-void list_print(list *);
+void list_print(list_t *);

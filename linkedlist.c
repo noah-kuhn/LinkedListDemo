@@ -108,11 +108,11 @@ void list_push(value_t v, value_type_t t, list_t *l){
 void list_append(value_t v, value_type_t t, list_t *l){
     /* error check */    
     if(l == NULL){
-      return false;
+      return;
     }
-    node_t new_node = malloc(sizeof(node_t));
+    node_t *new_node = malloc(sizeof(node_t));
     if(new_node == NULL){
-      return false;
+      return;
     }
 
     /* plug in the right type and value */
@@ -187,11 +187,13 @@ value_t list_pop(list_t *l){
     }
 
     /* free and unlink front node */
-    free(l->header->next); /* free the node struct itself */
     /* a note: normally, you would free the string it points to if applicable; this time, 
        we're electing not to, since the return value is that pointer when the val is a string. */
+    node_t *dead = l->header->next;
     l->header->next->next->prev = l->header;
     l->header->next = l->header->next->next;
+    free(dead);
+    l->size--;
 
     return ret_val;
 }
@@ -226,12 +228,12 @@ value_t list_remove_last(list_t *l){
             return ret_val;
     }
 
-    /* free and unlink front node */
-    free(l->header->prev); /* free the node struct itself */
-    /* a note: normally, you would free the string it points to if applicable; this time, 
-       we're electing not to, since the return value is that pointer when the val is a string. */
+    /* free and unlink last node */
+    node_t *dead = l->header->prev;
     l->header->prev->prev->next = l->header;
     l->header->prev = l->header->prev->prev;
+    free(dead);
+    l->size--;
 
     return ret_val;
 }
@@ -245,12 +247,14 @@ int list_size(list_t *l){
 }
 
 /* list_get(): int and list * parameters, returns the value at the given index */
-value_t list_get(int index, list *l){
-    if(index >= l->size){
-        return NULL;
+value_t list_get(int index, list_t *l){
+    if( !l || index >= l->size){
+        value_t null_val;
+        null_val.sval = NULL;
+        return null_val;
     }
     int i = 0;
-    node_t curr_node = l->header->next;
+    node_t *curr_node = l->header->next;
     while(i < index){
         curr_node = curr_node->next;
         i++;
@@ -259,12 +263,12 @@ value_t list_get(int index, list *l){
 }
 
 /* list_get_type(): int and list * parameters, returns the value type at the given index */
-value_type_t list_get_type(int index, list *l){
-    if(index >= l->size){
-        return NULL;
+value_type_t list_get_type(int index, list_t *l){
+    if( !l || index >= l->size){
+        return VAL_NONE;
     }
     int i = 0;
-    node_t curr_node = l->header->next;
+    node_t *curr_node = l->header->next;
     while(i < index){
         curr_node = curr_node->next;
         i++;
@@ -273,39 +277,44 @@ value_type_t list_get_type(int index, list *l){
 }
 
 /* list_print(): list * parameter, no return value; print the given list */
-void list_print(list *l){
-    printf("[");
-    node_t curr_node = l->header->next
-    while(curr_node != l->header){
-        switch(curr_node->type){
-            case VAL_CHAR:
-                printf(" (char) %c ", curr_node->val.cval);
-                break;
-            case VAL_INT:
-                printf(" (int) %d ", curr_node->val.ival);
-                break;
-            case VAL_BOOL:
-                printf(" (bool) %d ", curr_node->val.bval);
-                break;
-            case VAL_STR:
-                printf(" (char *) %s ", curr_node->val.sval);
-                break;
-            default:
-                /* if we have any errors, we may as well see 'em in hex */
-                print(" (ERROR) %x ", curr_node->val.sval);
+void list_print(list_t *l){
+    if(DEBUG_MODE){
+        if(!l){
+            return;
         }
-        if(curr_node->next != l->header){
-            print("|");
+        printf("[");
+        node_t *curr_node = l->header->next;
+        while(curr_node != l->header){
+            switch(curr_node->type){
+                case VAL_CHAR:
+                    printf(" (char) %c ", curr_node->val.cval);
+                    break;
+                case VAL_INT:
+                    printf(" (int) %d ", curr_node->val.ival);
+                    break;
+                case VAL_BOOL:
+                    printf(" (bool) %d ", curr_node->val.bval);
+                    break;
+                case VAL_STR:
+                    printf(" (char *) %s ", curr_node->val.sval);
+                    break;
+                default:
+                    /* if we have any errors, we may as well see 'em in hex */
+                    printf(" (ERROR) %llx ", ((long long int) curr_node->val.sval));
+            }
+            if(curr_node->next != l->header){
+                printf("|");
+            }
+            curr_node = curr_node->next;
         }
-        curr_node = curr_node->next;
+        printf("]\n");
     }
-    printf("]\n")
 }
 
-/* log(): for printing what's happening if DEBUG_MODE is on */
-void log(const char *s){
+/* demo_log(): for printing what's happening if DEBUG_MODE is on */
+void demo_log(const char *s){
     if(DEBUG_MODE){
-        printf(s);
+        printf("%s", s);
     }
 }
 
@@ -318,58 +327,75 @@ int main() {
     val1.ival = 429;
     val2.cval = 'A';
     val3.bval = true;
-    val4.sval = calloc(6, sizeof(char)); /* the string below is only five characters long, but we need six spots in memory to account for the null terminator */
-    *(val4.sval) = "cs429"; /* C strings are pointers to arrays of chars ending in a null terminator '\0' */
+    val4.sval = "cs429"; /* C strings are pointers to arrays of chars ending in a null terminator '\0' */
 
     list_t *list = list_new();
 
     if(list != NULL){
         /* here are a few basic tests */
 
-        log(">> Testing list_size(), list_append(), list_push(), list_remove_last(), and list_pop()...\n");
+        demo_log(">> Testing list_size(), list_append(), list_push(), list_remove_last(), and list_pop()...\n");
+
+        list_print(list);
 
         if(list_size(list) != 0){
-            log("!!! list_size() FAILED !!!\n");
+            demo_log("!!! list_size() FAILED !!!\n");
         }
 
+        demo_log(">> appending...\n");
         list_append(val1, VAL_INT, list);
-        log(">> appending...\n");
         list_print(list);
 
+        demo_log(">> pushing...\n");
         list_push(val2, VAL_CHAR, list);
-        log(">> pushing...\n")
         list_print(list);
 
+        demo_log(">> appending...\n");
         list_append(val3, VAL_BOOL, list);
-        log(">> appending...\n");
         list_print(list);
 
+        demo_log(">> pushing...\n");
         list_push(val4, VAL_STR, list);
-        log(">> pushing...\n");
         list_print(list);
 
         if(list_size(list) != 4){
-            log("!!! list_size() FAILED !!!\n");
+            demo_log("!!! list_size() FAILED !!!\n");
         }
 
+        demo_log(">> removing last...\n");
         list_remove_last(list);
-        log(">> removing last...\n");
         list_print(list);
+        printf("%d\n", list_size(list));
 
+        demo_log(">> popping...\n");
         list_pop(list);
-        log(">> popping...\n");
         list_print(list);
+        printf("%d\n", list_size(list));
         
-        list_remove_last(list);
-        log(">> removing last...\n");
-        list_print(list);
-
+        demo_log(">> popping...\n");
         list_pop(list);
-        log(">> popping...\n");
         list_print(list);
+        printf("%d\n", list_size(list));
+
+        demo_log(">> removing last...\n");
+        list_remove_last(list);
+        list_print(list);
+        printf("%d\n", list_size(list));
 
         if(list_size(list) != 0){
-            log("!!! list_size() FAILED !!!\n");
+            demo_log("!!! list_size() FAILED !!!\n");
+        }
+
+        demo_log(">> appending...\n");
+        list_append(val1, VAL_INT, list);
+        list_print(list);
+
+        demo_log(">> pushing...\n");
+        list_push(val2, VAL_CHAR, list);
+        list_print(list);
+
+        if(list_size(list) != 2){
+            demo_log("!!! list_size() FAILED !!!\n");
         }
 
     }else{
