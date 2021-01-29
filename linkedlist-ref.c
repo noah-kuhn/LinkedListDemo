@@ -202,7 +202,7 @@ value_t list_pop(list_t *l){
             ret_val.bval = l->header->next->val.bval;
             break;
         case VAL_STR:
-            /* [B] the original code I had here returned the actual address of the string rather
+            /* [B] The original code I had here returned the actual address of the string rather
                than copying it. I've changed it because we added a part below that frees the string
                during our discussion section. We need a copy since we're freeing the string -
                if you free a pointer and return it, it points to unallocated memory. */

@@ -5,7 +5,10 @@
  *  of C, but has some experience with Java. I should also note, this demo is for understanding,
  *  not efficiency.
  *
- *  This file (linkedlist.c) is the C file for the linked list demo.
+ *  This file (linkedlist.c) is the C file for the linked list demo. It has the functionalities
+ *  outlined with comments, but the actual functions have been gutted. These outlines serve to give
+ *  you a chance to work with important C concepts. There is also a reference solution file that
+ *  you can use to compare against your own code.
  *
  *  In this file, I have some comments that are related to each other; the one that appears later
  *  in the code will say (see comment [X]), which you can find by ctrl+f (or whatever search
@@ -39,9 +42,9 @@ list_t *list_new(){
     if( /* your list variable name here */ == NULL){
       return NULL;
     }
-    /* TODO: set all of its fields */
+    /* TODO: set all of its fields and update return value */
     
-    return /* your list variable name here */;
+    return NULL;
 }
 
 /* list_free(): list * parameter, no return value; free all space used by this list */
