@@ -21,10 +21,10 @@
 /* list_new(): no parameters, return a pointer to a new list or NULL if space can't be allocated */
 list_t *list_new(){
     list_t *l = malloc(sizeof(list_t));
-    /* What if malloc returned NULL? */
     if(l == NULL){
       return NULL;
     }
+    /* now we need to actually set all of its fields */
     l->header = malloc(sizeof(node_t));
     l->header->prev = l->header;
     l->header->val.sval = NULL;
@@ -39,7 +39,7 @@ void list_free(list_t *l){
     if(l == NULL){
         return;
     }
-    /* How about freeing the list elements and the strings? */
+    /* Remember to free the whole structure and any members it has! */
     node_t *node_to_free = NULL;
     node_t *curr_node = l->header->next;
     while(curr_node != NULL){
@@ -319,6 +319,7 @@ void demo_log(const char *s){
 }
 
 /* this is similar to Java main: this is the actual function that executes */
+/* for our purposes, main will just execute a few tests */
 int main() {
     printf("Starting linked list demo tests...\n");
 
@@ -363,40 +364,82 @@ int main() {
         }
 
         demo_log(">> removing last...\n");
-        list_remove_last(list);
+        if(list_remove_last(list).bval != val3.bval){
+            demo_log("!!! list_remove_last() FAILED !!!\n");
+        }
         list_print(list);
-        printf("%d\n", list_size(list));
 
         demo_log(">> popping...\n");
-        list_pop(list);
+        if(strcmp(list_pop(list).sval, val4.sval) != 0){ /* strcmp is a string comparison library function */
+            demo_log("!!! list_pop() FAILED !!!\n");
+        }
         list_print(list);
-        printf("%d\n", list_size(list));
         
         demo_log(">> popping...\n");
-        list_pop(list);
+        if(list_pop(list).cval != val2.cval){
+            demo_log("!!! list_pop() FAILED !!!\n");
+        }
         list_print(list);
-        printf("%d\n", list_size(list));
 
         demo_log(">> removing last...\n");
-        list_remove_last(list);
+        if(list_remove_last(list).ival != val1.ival){
+            demo_log("!!! list_remove_last() FAILED !!!\n");
+        }
         list_print(list);
-        printf("%d\n", list_size(list));
 
         if(list_size(list) != 0){
             demo_log("!!! list_size() FAILED !!!\n");
         }
 
-        demo_log(">> appending...\n");
-        list_append(val1, VAL_INT, list);
+        demo_log(">> pushing...\n");
+        list_push(val3, VAL_BOOL, list);
         list_print(list);
 
         demo_log(">> pushing...\n");
         list_push(val2, VAL_CHAR, list);
         list_print(list);
 
-        if(list_size(list) != 2){
+        demo_log(">> pushing...\n");
+        list_push(val1, VAL_INT, list);
+        list_print(list);
+
+        demo_log(">> pushing...\n");
+        list_push(val2, VAL_CHAR, list);
+        list_print(list);
+
+        demo_log(">> pushing...\n");
+        list_push(val3, VAL_BOOL, list);
+        list_print(list);
+
+        if(list_size(list) != 5){
             demo_log("!!! list_size() FAILED !!!\n");
         }
+
+        demo_log(">> Testing list_get(), list_get_type()...\n");
+        list_print(list);
+
+        demo_log(">> getting value of index 1...\n");
+        if(list_get(1, list).cval != val2.cval){
+            demo_log("!!! list_get() FAILED !!!\n");
+        }
+
+        demo_log(">> getting type of index 1...\n");
+        if(list_get_type(1, list) != VAL_CHAR){
+            demo_log("!!! list_get_type() FAILED !!!\n");
+        }
+        
+        demo_log(">> getting value of index 2...\n");
+        if(list_get(2, list).ival != val1.ival){
+            demo_log("!!! list_get() FAILED !!!\n");
+        }
+
+        demo_log(">> getting type of index 2...\n");
+        if(list_get_type(2, list) != VAL_INT){
+            demo_log("!!! list_get_type() FAILED !!!\n");
+        }
+
+        list_free(list);
+        list = NULL; /* it's a good idea to NULL out your freed pointers so you don't accidentally access unallocated memory */
 
     }else{
         printf("!!! list_new() FAILED !!!\n");
