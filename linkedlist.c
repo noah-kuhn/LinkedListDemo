@@ -9,7 +9,8 @@
  *
  */
 
-/* We're going to need these libraries */
+/* Here are some fairly standard libraries - not all are used here, but it'll be helpful if
+   you're familiar with them! */
 #include <stdlib.h>     /* standard library */
 #include <stdio.h>      /* standard input/output library */
 #include <string.h>     /* standard string library */

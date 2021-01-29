@@ -11,7 +11,8 @@
  *
  */
 
-/* We're going to need these libraries */
+/* Here are some fairly standard libraries - not all are used here, but it'll be helpful if
+   you're familiar with them! */
 #include <stdlib.h>     /* standard library */
 #include <stdio.h>      /* standard input/output library */
 #include <string.h>     /* standard string library */
@@ -19,6 +20,11 @@
 #include "list.h"       /* we also need to include our header file! this includes stdbool for us */
 
 #define DEBUG_MODE 1    /* we will use #define to declare this constant ahead of time */
+
+/* I declare this function up here so you can use it in other functions that are defined above demo_log's definition.
+   Remember: C reads from top to bottom - if you were to call demo_log in a list function without declaring it above the
+   list function, C would have no clue what you meant, and it would be mad at you. */
+void demo_log(const char *);
 
 /* list_new(): no parameters, return a pointer to a new list or NULL if space can't be allocated */
 list_t *list_new(){
@@ -44,17 +50,23 @@ void list_free(list_t *l){
     /* Remember to free the whole structure and any members it has! */
     node_t *node_to_free = NULL;
     node_t *curr_node = l->header->next;
-    while(curr_node != NULL){
+    while(curr_node != l->header){
         node_to_free = curr_node;
         curr_node = curr_node->next;
         if(curr_node->type == VAL_STR){
             free(curr_node->val.sval);
         }
         free(node_to_free);
+        /* in discussion section, I got a little confused here while answering whether 
+           we should free their prev and next nodes.
+           
+           short answer: no. if you free the prev and next node, you're freeing up
+           nodes from the list too early; leave them be and come back to free those
+           nodes by iterating through the list. -Noah */
     }
-    /* Free the list structure itself */
+    /* Free the list structure's header and the structure itself */
+    free(l->header);
     free(l);
-    return;
 }
 
 /* list_push(): value, value type, and list * parameters, no return value; add the value to the front of the list */
@@ -97,12 +109,11 @@ void list_push(value_t v, value_type_t t, list_t *l){
     new_node->type = t;
 
     /* link at the front of the list */
-    if(l->size == 0){
-        l->header->prev = new_node;
-    }
-    new_node->next = l->header->next;
-    new_node->prev = l->header;
-    l->header->next = new_node;
+    /* see comment on line 159 */
+    l->header->next->prev = new_node;   /* the former first node now has a prev reference to the new node */
+    new_node->next = l->header->next;   /* the new node's next reference is to the former first node */
+    new_node->prev = l->header;         /* the new node's prev reference is to the header */
+    l->header->next = new_node;         /* the header's next reference is to the new node */
     l->size++;
 }
 
@@ -146,15 +157,12 @@ void list_append(value_t v, value_type_t t, list_t *l){
     new_node->type = t;
 
     /* link at the back of the list */
-    if(l->size > 0){
-      l->header->prev->next = new_node;
-    }
-    if(l->size == 0){
-      l->header->next = new_node;
-    }
-    new_node->prev = l->header->prev;
-    new_node->next = l->header;
-    l->header->prev = new_node;
+    /* in discussion section, I did some really weird stuff with if statements here. I blame that on a lack
+       of sleep. The following should work fine. Never code when you're tired! -Noah */
+    l->header->prev->next = new_node;   /* the former last node now has a next reference to the new node */
+    new_node->prev = l->header->prev;   /* the new node's prev reference is to the former last node */
+    new_node->next = l->header;         /* the new node's next reference is to the header */
+    l->header->prev = new_node;         /* the header's prev reference is to the new node */
     l->size++;
 }
 
@@ -180,8 +188,16 @@ value_t list_pop(list_t *l){
             ret_val.bval = l->header->next->val.bval;
             break;
         case VAL_STR:
-            /* this time we don't want to copy it - we want to return the actual address */
-            ret_val.sval = l->header->next->val.sval;
+            /* the original code I had here returned the actual address of the string rather than
+               copying it. I've changed it because we added a part below that frees the string
+               during our discussion section. We need a copy since we're freeing the string -
+               if you free a pointer and return it, it points to unallocated memory. */
+            ret_val.sval = malloc(strlen(l->header->next->val.sval) + 1);
+            if(ret_val.sval == NULL){
+                /* major issue, return early (NULL) */
+                return ret_val;
+            }
+            strcpy(ret_val.sval, l->header->next->val.sval); /* strcpy as used above */
             break;
         default:
             /* major issue! return ret_val, which at this point should still be NULL */
@@ -189,11 +205,15 @@ value_t list_pop(list_t *l){
     }
 
     /* free and unlink front node */
-    /* a note: normally, you would free the string it points to if applicable; this time, 
-       we're electing not to, since the return value is that pointer when the val is a string. */
     node_t *dead = l->header->next;
     l->header->next->next->prev = l->header;
     l->header->next = l->header->next->next;
+    
+    /* account for strings */
+    if(dead->type == VAL_STR){
+        free(dead->val.sval);
+    }
+    
     free(dead);
     l->size--;
 
@@ -222,8 +242,13 @@ value_t list_remove_last(list_t *l){
             ret_val.bval = l->header->prev->val.bval;
             break;
         case VAL_STR:
-            /* this time we don't want to copy it - we want to return the actual address */
-            ret_val.sval = l->header->prev->val.sval;
+            /* see comment on line 190 */
+            ret_val.sval = malloc(strlen(l->header->next->val.sval) + 1);
+            if(ret_val.sval == NULL){
+                /* major issue, return early (NULL) */
+                return ret_val;
+            }
+            strcpy(ret_val.sval, l->header->next->val.sval); /* strcpy as used above */
             break;
         default:
             /* major issue! return ret_val, which at this point should still be NULL */
@@ -234,6 +259,12 @@ value_t list_remove_last(list_t *l){
     node_t *dead = l->header->prev;
     l->header->prev->prev->next = l->header;
     l->header->prev = l->header->prev->prev;
+
+    /* account for strings */
+    if(dead->type == VAL_STR){
+        free(dead->val.sval);
+    }
+
     free(dead);
     l->size--;
 
@@ -372,7 +403,9 @@ int main() {
         list_print(list);
 
         demo_log(">> popping...\n");
-        if(strcmp(list_pop(list).sval, val4.sval) != 0){ /* strcmp is a string comparison library function */
+        char *tmp = list_pop(list).sval;
+        if(strcmp(tmp, val4.sval) != 0){ /* strcmp is a string comparison library function */
+            printf("%p vs %p", tmp, val4.sval);
             demo_log("!!! list_pop() FAILED !!!\n");
         }
         list_print(list);
