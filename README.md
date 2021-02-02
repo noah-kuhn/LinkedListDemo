@@ -1,8 +1,8 @@
 # Linked List Demo
 
-*Author: Noah Kuhn*
-
 **Just a little linked list demo: some toy code, comments, and bugs.**
+
+*Author: Noah Kuhn*
 
 > Java is like a bicycle with training wheels. <br> C is like a unicycle, and you're going downhill.
 > *\- Dr. Chatterjee (paraphrased)*
