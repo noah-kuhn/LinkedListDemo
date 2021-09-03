@@ -9,12 +9,6 @@
  *  I put 'solution' in quotes because this was written hastily and definitely has memory leaks;
  *  however, it contains the usage of C concepts such as structs, enums, unions, and pointers.
  *
- *  In this file, I have some comments that are related to each other; the one that appears later
- *  in the code will say (see comment [X]), which you can find by ctrl+f (or whatever search
- *  feature is available to you) and searching for the comment name in brackets, e.g. "[X]". This
- *  is mostly because a lot of the functions mirror others, and I didn't want to be redundant with
- *  the comments.
- *
  */
 
 /* Here are some fairly standard libraries - not all are used here, but it'll be helpful if
@@ -66,12 +60,9 @@ void list_free(list_t *l){
             free(curr_node->val.sval);
         }
         free(node_to_free);
-        /* in discussion section, I got a little confused here while answering whether 
-           we should free their prev and next nodes.
-           
-           short answer: no. if you free the prev and next node, you're freeing up
-           nodes from the list too early; leave them be and come back to free those
-           nodes by iterating through the list. -Noah */
+        /* don't free prev or next nodes; if you free the prev and next node, you're
+           freeing up nodes from the list too early -- leave them be and come back
+           to free those nodes by iterating through the list. */
     }
     /* Free the list structure's header and the structure itself */
     free(l->header);
@@ -120,9 +111,6 @@ void list_push(value_t v, value_type_t t, list_t *l){
     new_node->type = t;
 
     /* link at the front of the list */
-    /* [A] in discussion section, I did some really weird stuff with if statements here. I blame
-       that on a lack of sleep. The following should work fine. Never code when you're tired!
-       -Noah */
     l->header->next->prev = new_node;   /* former first node's prev reference is to new node */
     new_node->next = l->header->next;   /* new node's next reference is to former first node */
     new_node->prev = l->header;         /* new node's prev reference is to header */
@@ -172,7 +160,6 @@ void list_append(value_t v, value_type_t t, list_t *l){
     new_node->type = t;
 
     /* link at the back of the list */
-    /* (see comment [A])*/
     l->header->prev->next = new_node;   /* former last node's next reference is to new node */
     new_node->prev = l->header->prev;   /* new node's prev reference is to former last node */
     new_node->next = l->header;         /* new node's next reference is to header */
@@ -202,9 +189,7 @@ value_t list_pop(list_t *l){
             ret_val.bval = l->header->next->val.bval;
             break;
         case VAL_STR:
-            /* [B] The original code I had here returned the actual address of the string rather
-               than copying it. I've changed it because we added a part below that frees the string
-               during our discussion section. We need a copy since we're freeing the string -
+            /* We need a copy of the string to return since we're freeing the string -
                if you free a pointer and return it, it points to unallocated memory. */
             ret_val.sval = malloc(strlen(l->header->next->val.sval) + 1);
             if(ret_val.sval == NULL){
@@ -256,7 +241,6 @@ value_t list_remove_last(list_t *l){
             ret_val.bval = l->header->prev->val.bval;
             break;
         case VAL_STR:
-            /* (see comment [B]) */
             ret_val.sval = malloc(strlen(l->header->next->val.sval) + 1);
             if(ret_val.sval == NULL){
                 /* major issue, return early (NULL) */
@@ -287,10 +271,7 @@ value_t list_remove_last(list_t *l){
 
 /* list_size(): list * parameter, return its size */
 int list_size(list_t *l){
-    if(l == NULL){
-        return 0;
-    }
-    return l->size;
+    return l == NULL ? 0 : l->size;
 }
 
 /* list_get(): int and list * parameters, returns the value at the given index */

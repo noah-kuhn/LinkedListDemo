@@ -49,7 +49,7 @@ typedef struct NODE{
 } node_t; /* don't worry, node_t * is still a valid type for prev and next now that it's defined */
 
 /* DEFINITION OF LIST_T STRUCT */
-/* Our lists our doubly-linked and have a reference to the header node and an int size */
+/* Our lists are doubly-linked and have a reference to the header node and an int size */
 typedef struct{
     node_t *header;
     int size;

@@ -10,12 +10,6 @@
  *  you a chance to work with important C concepts. There is also a reference solution file that
  *  you can use to compare against your own code.
  *
- *  In this file, I have some comments that are related to each other; the one that appears later
- *  in the code will say (see comment [X]), which you can find by ctrl+f (or whatever search
- *  feature is available to you) and searching for the comment name in brackets, e.g. "[X]". This
- *  is mostly because a lot of the functions mirror others, and I didn't want to be redundant with
- *  the comments.
- *
  */
 
 /* Here are some fairly standard libraries - not all are used here, but it'll be helpful if
@@ -165,9 +159,7 @@ value_t list_pop(list_t *l){
 
             break;
         case VAL_STR:
-            /* [B] The original code I had here returned the actual address of the string rather
-               than copying it. I've changed it because we added a part below that frees the string
-               during our discussion section. We need a copy since we're freeing the string -
+            /* We need a copy of the string to return since we're freeing the string -
                if you free a pointer and return it, it points to unallocated memory. */
             
             break;
@@ -206,7 +198,6 @@ value_t list_remove_last(list_t *l){
             ret_val.bval = l->header->prev->val.bval;
             break;
         case VAL_STR:
-            /* (see comment [B]) */
             ret_val.sval = malloc(strlen(l->header->next->val.sval) + 1);
             if(ret_val.sval == NULL){
                 /* major issue, return early (NULL) */
@@ -229,10 +220,7 @@ value_t list_remove_last(list_t *l){
 
 /* list_size(): list * parameter, return its size */
 int list_size(list_t *l){
-    if(l == NULL){
-        return 0;
-    }
-    return l->size;
+    return l == NULL ? 0 : l->size;
 }
 
 /* list_get(): int and list * parameters, returns the value at the given index */
@@ -244,7 +232,7 @@ value_t list_get(int index, list_t *l){
         return null_val;
     }
     /* TODO: cycle through the linked list until we arrive at the index */
-    return null_val;
+    return /*something*/;
 }
 
 /* list_get_type(): int and list * parameters, returns the value type at the given index */
